@@ -1,6 +1,7 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -8,71 +9,72 @@ generator client {
 }
 
 model Investor {
-  id            Int              @id @default(autoincrement())
-  name          String
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
   contactName   String
-  email         String           @unique
-  linkedin      String           @unique
+  email         String   @unique
+  linkedin      String   @unique
   website       String
   minInvestment Float
   maxInvestment Float
-  engagement    Engagement       @relation(fields: [engagementId], references: [id])
   engagementId  Int
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
 
+  engagement    Engagement         @relation(fields: [engagementId], references: [id])
   phases        InvestorPhase[]
   investorTypes InvestorTypeLink[]
   cities        InvestorCity[]
+  published     Boolean            @default(false)
 }
 
 model Phase {
-  id         Int            @id @default(autoincrement())
-  name       String         @unique
-  investors  InvestorPhase[]
+  id        Int             @id @default(autoincrement())
+  name      String          @unique
+  investors InvestorPhase[]
 }
 
 model InvestorPhase {
   investorId Int
   phaseId    Int
-  investor   Investor       @relation(fields: [investorId], references: [id])
-  phase      Phase          @relation(fields: [phaseId], references: [id])
+  investor   Investor @relation(fields: [investorId], references: [id])
+  phase      Phase    @relation(fields: [phaseId], references: [id])
 
   @@id([investorId, phaseId])
 }
 
 model InvestorType {
-  id         Int                @id @default(autoincrement())
-  name       String             @unique
-  investors  InvestorTypeLink[]
+  id        Int                @id @default(autoincrement())
+  name      String             @unique
+  investors InvestorTypeLink[]
 }
 
 model InvestorTypeLink {
   investorId Int
   typeId     Int
-  investor   Investor           @relation(fields: [investorId], references: [id])
-  type       InvestorType       @relation(fields: [typeId], references: [id])
+  investor   Investor     @relation(fields: [investorId], references: [id])
+  type       InvestorType @relation(fields: [typeId], references: [id])
 
   @@id([investorId, typeId])
 }
 
 model City {
-  id         Int            @id @default(autoincrement())
-  name       String         @unique
-  investors  InvestorCity[]
+  id        Int            @id @default(autoincrement())
+  name      String         @unique
+  investors InvestorCity[]
 }
 
 model InvestorCity {
   investorId Int
   cityId     Int
-  investor   Investor       @relation(fields: [investorId], references: [id])
-  city       City           @relation(fields: [cityId], references: [id])
+  investor   Investor @relation(fields: [investorId], references: [id])
+  city       City     @relation(fields: [cityId], references: [id])
 
   @@id([investorId, cityId])
 }
 
 model Engagement {
-  id         Int        @id @default(autoincrement())
-  type       String     @unique
-  investors  Investor[]
+  id        Int        @id @default(autoincrement())
+  type      String     @unique
+  investors Investor[]
 }

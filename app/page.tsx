@@ -1,8 +1,16 @@
 // app/page.tsx
 import { prisma } from '../lib/prisma'
+import { GetServerSideProps } from 'next'
 
-export default async function Home() {
-  const investors = await prisma.investor.findMany({
+async function getInvestors(query: string) {
+  return await prisma.investor.findMany({
+    where: {
+      OR: [
+        { name: { search: query } },
+        { contactName: { search: query } },
+        { email: { search: query } },
+      ],
+    },
     include: {
       engagement: true,
       phases: {
@@ -22,17 +30,35 @@ export default async function Home() {
       },
     },
   })
+}
+
+interface HomeProps {
+  searchParams: { q?: string }
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const query = searchParams?.q || ''
+  const investors = await getInvestors(query)
 
   return (
     <div>
       <h1 className="text-3xl font-bold underline">Investors</h1>
+      <form method="get">
+        <input
+          type="text"
+          name="q"
+          defaultValue={query}
+          placeholder="Search investors"
+        />
+        <button type="submit">Search</button>
+      </form>
       <ul>
         {investors.map((investor) => (
           <li key={investor.id}>
             {investor.name} - {investor.email}
             <ul>
-              <li>LinkedIn: {investor.linkedin}</li>
-              <li>Website: {investor.website}</li>
+              <li>LinkedIn: <a href={investor.linkedin}>{investor.linkedin}</a></li>
+              <li>Website: <a href={investor.website}>{investor.website}</a></li>
               <li>Engagement: {investor.engagement.type}</li>
               <li>Phases: {investor.phases.map(p => p.phase.name).join(', ')}</li>
               <li>Types: {investor.investorTypes.map(t => t.type.name).join(', ')}</li>
